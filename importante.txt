@@ -1,0 +1,2 @@
+en caso que no funcione wtforms instalar el paquete
+pip install form-WTF
