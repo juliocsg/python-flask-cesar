@@ -6,7 +6,8 @@
    {% from '_macro.html' import render_field %}
    <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1 ">
        <br><br>
-       <form name="sentMessage" id="contactForm" method="POST">
+       <form name="sentMessage" id="loginForm" method="POST">
+           <input type="hidden" name="csrf_token" value="{{csrf_token()}}"/>
            <div class="row">
                <div class="form-group col-xs-12 floating-label-form-group controls"></div><br>
                {{render_field(form.username, class='form-control')}}
@@ -14,21 +15,14 @@
            </div>
            <div class="row">
                <div class="form-group col-xs-12 floating-label-form-group controls"></div><br>
-               {{render_field(form.email, class='form-control')}}
+               {{render_field(form.password, class='form-control')}}
                <p class="help-block text-danger"></p>
            </div>
-           <div class="row">
-               <div class="form-group col-xs-12 floating-label-form-group controls"></div><br>
-               {{render_field(form.comment, class='form-control')}}
-               <p class="help-block text-danger"></p>
-           </div>
-           <!-- {{form.honeypot}}-->
-           <!-- {{render_field(form.honeypot, class='form-control')}} -->
            <br>
            <div id="success">
                <div class="row">
                     <div class="form-group col-xs-12">
-                        <button type="submit" class="btn btn-primary">Send</button>
+                        <button type="submit" class="btn btn-primary">Entrar</button>
                     </div>
                </div>
            </div>
