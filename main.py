@@ -8,6 +8,8 @@ from flask import url_for
 from flask import redirect
 from flask import g
 from flask_wtf import CsrfProtect
+from models import db
+from models import User
 #from flask_environments import Environments
 
 import config
@@ -17,10 +19,13 @@ import json
 app = Flask(__name__)
 
 #app.config_class.from_object(DevelopmentConfig)
-#app.config['DEBUG'] = True
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://multi_cesar:12345@localhost/flask'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 #app.config.from_object(config)
 #app.config.from_object(config)
 #app.config.from_pyfile('config.py')
+#app.config.from_envvar('SECRET_KEY')
+#app.config.from_envvar('SQLALCHEMY_DATABASE_URI')
 app.secret_key = 'my_secret_key'
 csrf = CsrfProtect(app)
 #csrf = CsrfProtect(app)
@@ -100,4 +105,11 @@ def after_request(response):
 if __name__ == '__main__':
     #csrf.init_app(app)
     #csrf.__init__(app)
-    app.run(debug = True, port = 9000)
+    '''
+    app.run(debug=True, port = 9000)
+    '''
+    db.init_app(app)
+    with app.app_context():
+        db.create_all() #crea todas las tablas
+        #SQLALCHEMY_DATABASE_URI = 'mysql://root:@localhost/flask'
+    app.run(port=9000)

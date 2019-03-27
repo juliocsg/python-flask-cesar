@@ -1,2 +1,23 @@
 en caso que no funcione wtforms instalar el paquete
 pip install form-WTF
+pip install flask-wtf
+set nombre_conf=valor
+instalador base de datos co
+
+pip install flask-SQLAlchemy
+
+pip install Flask-SQLAlchemy probar de nuevo por si acaso
+comandos de mysql 
+
+
+mysql -u root -p
+drop database flask;
+create database flask;
+show tables;
+
+http://flask-sqlalchemy.pocoo.org/2.3/
+
+instalar python mysql en este caso
+pip install python-mysql
+Con postgresql
+pip install psycopg2-binary
