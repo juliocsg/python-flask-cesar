@@ -26,10 +26,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 #app.config.from_pyfile('config.py')
 #app.config.from_envvar('SECRET_KEY')
 #app.config.from_envvar('SQLALCHEMY_DATABASE_URI')
-app.secret_key = 'my_secret_key'
+app.SECRET_KEY = 'my_secret_key'
 csrf = CsrfProtect(app)
-#csrf = CsrfProtect(app)
-
 #Ejecuta antes del request
 @app.before_request
 def before_request():
@@ -96,14 +94,28 @@ def ajax_login():
     response = { 'status': 200, 'username': username, 'id': 1}
     #transforma en formato json
     return json.dumps(response)
+@app.route('/create', methods = ['GET', 'POST'])
+def create():
+    create_form = forms.CreateForm(request.form)
+    if request.method == 'POST' and create_form.validate():
+        #Proceso de persistencia en la base de datos
+        user = User(username = create_form.username.data,
+                    password = create_form.password.data,
+                    email = create_form.email.data)
+        db.session.add(user)
+        db.session.commit()
+        success_message = 'Usuario registrado en la base de datos'
+        flash(success_message)
+    title_crear= 'Crear usuario'
+    return render_template('create.html',title = title_crear, form = create_form)
 @app.after_request
 def after_request(response):
-    print(g.test)
+    #print(g.test)
     print("3")
     return response #Siempre tiene que devolver el response en after_request
 
 if __name__ == '__main__':
-    #csrf.init_app(app)
+    csrf.init_app(app)
     #csrf.__init__(app)
     '''
     app.run(debug=True, port = 9000)
