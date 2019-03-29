@@ -9,8 +9,10 @@ from flask import redirect
 from flask import g
 from flask_wtf import CsrfProtect
 from models import db
+from werkzeug.security import generate_password_hash
 from models import User
 #from flask_environments import Environments
+#<input type="hidden" name="csrf_token" value="{{csrf_token()}}"/>-->
 
 import config
 import forms
@@ -26,8 +28,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 #app.config.from_pyfile('config.py')
 #app.config.from_envvar('SECRET_KEY')
 #app.config.from_envvar('SQLALCHEMY_DATABASE_URI')
-app.SECRET_KEY = 'my_secret_key'
-csrf = CsrfProtect(app)
+#app.SECRET_KEY = 'my_secret_key3'
+#csrf = CsrfProtect(app)
 #Ejecuta antes del request
 @app.before_request
 def before_request():
@@ -100,8 +102,8 @@ def create():
     if request.method == 'POST' and create_form.validate():
         #Proceso de persistencia en la base de datos
         user = User(username = create_form.username.data,
-                    password = create_form.password.data,
-                    email = create_form.email.data)
+                    email = create_form.email.data,
+                    password = generate_password_hash(create_form.password.data))
         db.session.add(user)
         db.session.commit()
         success_message = 'Usuario registrado en la base de datos'
@@ -115,7 +117,7 @@ def after_request(response):
     return response #Siempre tiene que devolver el response en after_request
 
 if __name__ == '__main__':
-    csrf.init_app(app)
+    #csrf.init_app(app)
     #csrf.__init__(app)
     '''
     app.run(debug=True, port = 9000)
