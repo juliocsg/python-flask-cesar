@@ -34,10 +34,10 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 #app.config.from_envvar('SECRET_KEY')
 #app.config.from_envvar('SQLALCHEMY_DATABASE_URI')
 app.config['WTF_CSRF_CHECK_DEFAULT'] = False
-#app.SECRET_KEY = 'my_secret_key3'
+app.SECRET_KEY = 'my_secret_key3'
 app.WTF_CSRF_CHECK_DEFAULT = 'my_secret_key3'
 #csrf = CsrfProtect(app)
-#csrf = CsrfProtect(app)
+csrf = CsrfProtect(app)
 #Ejecuta antes del request
 @app.before_request
 def before_request():
@@ -54,6 +54,8 @@ def before_request():
     #if 'username' not in session:
     #   print(request.endpoint)
     #  print("El usuario necesita login!")
+
+
 #error 404
 @app.errorhandler(404)
 def page_not_found(e):
@@ -86,15 +88,50 @@ def logout():
     return redirect(url_for('login')) #el url_for obtiene la función
 @app.route('/login', methods = ['GET','POST'])
 def login():
-    form = forms.LoginForm()
-    user = User.query.filter_by(username=form.username.data).first()
-    if user and bcrypt.check_password_hash(user.password, form.password.data):
-        next_page = request.args.get('next')
-        return redirect(next_page) if next_page else redirect(url_for('home'))
-    else:
-        flash('Login Unsuccessful. Please check email and password', 'danger')
-        title = 'Curso Flask'
-    return render_template('login.html', title = title, form = form)
+    login_form = forms.LoginForm(request.form)
+    if request.method =='POST' and login_form.validate():
+        username = login_form.username.data
+        password = login_form.password.data
+        #user = User.query.filterby(username = username).first()
+        #user = query_db('''select * from users where username = ?''', [request.form['username']], one=True)
+        print("exito")
+        '''
+        if user is None:
+            error = 'Invalid username'
+            print(error)
+        elif not check_password_hash(user.password, password):
+            print("Exito")
+            success_message = 'Bienvenido {}'.format(username)
+            flash(success_message)
+            print(success_message)
+            #session['username'] = username
+            #return redirect(url_for('index'))
+        '''
+        #user = User.query.filter_by(email='netmaster@gmail.com').first()
+        user = User.query.filter_by(username=username).first()
+        #print("5")
+        #if user and check_password_hash(user.password,  generate_password_hash(login_form.password.data)):
+        '''
+            is not None
+        '''
+        if user and bcrypt.check_password_hash(user.password,  bcrypt.generate_password_hash(login_form.password.data)):
+            success_message = 'Bienvenido {}'.format(username)
+            flash(success_message)
+            return redirect(url_for('index'))
+        else:
+            flash('Login erróneo. Por favor revisa el email y el password', 'danger')
+        '''
+        if user is not None and user.verify_password(password):
+            success_message = 'Bienvenido {}'.format(username)
+            flash(success_message)
+            #session['username'] = username
+            return redirect(url_for('index'))
+        else:
+            error_message = 'Usuario o password no validos!'
+            flash(error_message)
+        '''
+    title = "Curso Flask"
+    return render_template('login.html', title = title, form = login_form)
 @app.route('/cookie', methods = ['GET', 'POST'])
 def cookie():
     title = 'Coockies'
@@ -131,7 +168,7 @@ def after_request(response):
     return response #Siempre tiene que devolver el response en after_request
 
 if __name__ == '__main__':
-    #csrf.init_app(app)
+    csrf.init_app(app)
     #csrf.__init__(app)
     '''
     app.run(debug=True, port = 9000)

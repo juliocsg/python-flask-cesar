@@ -1,3 +1,9 @@
+from flask import render_template, url_for, flash, redirect, request
+from flaskblog import app, db, bcrypt
+from flaskblog.forms import RegistrationForm, LoginForm
+from flaskblog.models import User, Post
+from flask_login import login_user, current_user, logout_user, login_required
+import json
 from flask import Flask
 from flask import render_template
 from flask import request
@@ -15,30 +21,22 @@ from models import db
 from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
 from models import User
-#from flask_environments import Environments
-#<input type="hidden" name="csrf_token" value="{{csrf_token()}}"/>-->
 
-import config
-import forms
-import json
+posts = [
+    {
+        'author': 'Corey Schafer',
+        'title': 'Blog Post 1',
+        'content': 'First post content',
+        'date_posted': 'April 20, 2018'
+    },
+    {
+        'author': 'Jane Doe',
+        'title': 'Blog Post 2',
+        'content': 'Second post content',
+        'date_posted': 'April 21, 2018'
+    }
+]
 
-app = Flask(__name__)
-bcrypt = Bcrypt(app)
-#bcrypt = bcrypt(app)
-#app.config_class.from_object(DevelopmentConfig)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://multi_cesar:12345@localhost/flask'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-#app.config.from_object(config)
-#app.config.from_object(config)
-#app.config.from_pyfile('config.py')
-#app.config.from_envvar('SECRET_KEY')
-#app.config.from_envvar('SQLALCHEMY_DATABASE_URI')
-app.config['WTF_CSRF_CHECK_DEFAULT'] = False
-#app.SECRET_KEY = 'my_secret_key3'
-app.WTF_CSRF_CHECK_DEFAULT = 'my_secret_key3'
-#csrf = CsrfProtect(app)
-#csrf = CsrfProtect(app)
-#Ejecuta antes del request
 @app.before_request
 def before_request():
     #if 'username' not in session and request.endpoint not in ['index']:
@@ -79,22 +77,6 @@ def index2():
     title = "Curso Flask"
     return render_template('index2.html',title = title, form = comment_form)
 
-@app.route('/logout', methods = ['GET','POST'])
-def logout():
-    if 'username' in session:
-        session.pop('username')
-    return redirect(url_for('login')) #el url_for obtiene la función
-@app.route('/login', methods = ['GET','POST'])
-def login():
-    form = forms.LoginForm()
-    user = User.query.filter_by(username=form.username.data).first()
-    if user and bcrypt.check_password_hash(user.password, form.password.data):
-        next_page = request.args.get('next')
-        return redirect(next_page) if next_page else redirect(url_for('home'))
-    else:
-        flash('Login Unsuccessful. Please check email and password', 'danger')
-        title = 'Curso Flask'
-    return render_template('login.html', title = title, form = form)
 @app.route('/cookie', methods = ['GET', 'POST'])
 def cookie():
     title = 'Coockies'
@@ -130,14 +112,55 @@ def after_request(response):
     print("3")
     return response #Siempre tiene que devolver el response en after_request
 
-if __name__ == '__main__':
-    #csrf.init_app(app)
-    #csrf.__init__(app)
-    '''
-    app.run(debug=True, port = 9000)
-    '''
-    db.init_app(app)
-    with app.app_context():
-        db.create_all() #crea todas las tablas
-        #SQLALCHEMY_DATABASE_URI = 'mysql://root:@localhost/flask'
-    app.run(port=9000)
+@app.route("/")
+@app.route("/home")
+def home():
+    return render_template('home.html', posts=posts)
+
+
+@app.route("/about")
+def about():
+    return render_template('about.html', title='About')
+
+
+@app.route("/register", methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        user = User(username=form.username.data, email=form.email.data, password=hashed_password)
+        db.session.add(user)
+        db.session.commit()
+        flash('Your account has been created! You are now able to log in', 'success')
+        return redirect(url_for('login'))
+    return render_template('register.html', title='Register', form=form)
+
+
+@app.route("/login", methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user and bcrypt.check_password_hash(user.password, form.password.data):
+            login_user(user, remember=form.remember.data)
+            next_page = request.args.get('next')
+            return redirect(next_page) if next_page else redirect(url_for('home'))
+        else:
+            flash('Login Unsuccessful. Please check email and password', 'danger')
+    return render_template('login.html', title='Login', form=form)
+
+
+@app.route("/logout")
+def logout():
+    logout_user()
+    return redirect(url_for('home'))
+
+
+@app.route("/account")
+@login_required
+def account():
+    return render_template('account.html', title='Account')

@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash
+from werkzeug.security import check_password_hash
 import datetime
 db = SQLAlchemy()
 
@@ -13,6 +14,9 @@ class User(db.Model):
     password = db.Column(db.String(150))
     create_date = db.Column(db.DateTime, default = datetime.datetime.now)
 #__ significa que la función será privada
+def verify_password(self, password):
+    return check_password_hash(self.password, password)
+    '''bcrypt.'''
 '''def __init__(self, username, email, password):
     #self.id = id
     self.username = username
